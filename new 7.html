@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUOTEX WIN - Neural Trading Bot</title>
+    <script src='https://libtl.com/sdk.js' data-zone='9814780' data-sdk='show_9814780'></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-bg: radial-gradient(ellipse at top, #000000 0%, #0a0a0f 25%, #1a1a2e 50%, #16213e 100%);
+            --neural-grid: linear-gradient(90deg, rgba(0,255,136,0.1) 1px, transparent 1px), 
+                          linear-gradient(rgba(0,255,136,0.1) 1px, transparent 1px);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #00ff88;
+            --accent-secondary: #00d4ff;
+            --accent-danger: #ff3366;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b9a;
+            --text-muted: #4a4a5a;
+            --success-glow: rgba(0, 255, 136, 0.4);
+            --error-glow: rgba(255, 51, 102, 0.4);
+            --info-glow: rgba(0, 212, 255, 0.4);
+            --neural-pulse: rgba(0, 255, 136, 0.6);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: var(--primary-bg);
+            background-size: 50px 50px;
+            background-image: var(--neural-grid);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 51, 102, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .neural-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 32px;
+            border: 1px solid var(--glass-border);
+            padding: 32px;
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(0, 255, 136, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            animation: neuralFloat 8s ease-in-out infinite;
+        }
+        
+        @keyframes neuralFloat {
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            25% { transform: translateY(-8px) rotateX(1deg); }
+            50% { transform: translateY(-12px) rotateX(0deg); }
+            75% { transform: translateY(-4px) rotateX(-1deg); }
+        }
+        
+        .neural-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--accent-primary) 20%, 
+                var(--accent-secondary) 50%, 
+                var(--accent-danger) 80%, 
+                transparent 100%);
+            background-size: 300% 100%;
+            animation: neuralPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes neuralPulse {
+            0%, 100% { background-position: 0% 50%; opacity: 0.6; }
+            50% { background-position: 100% 50%; opacity: 1; }
+        }
+        
+        .neural-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            padding: 1px;
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,0.1) 0%, 
+                transparent 30%, 
+                transparent 70%, 
+                rgba(0,255,136,0.1) 100%);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: xor;
+            -webkit-mask-composite: xor;
+            pointer-events: none;
+        }
+        
+        .ai-header {
+            text-align: center;
+            margin-bottom: 36px;
+            position: relative;
+        }
+        
+        .neural-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 24px;
+            padding: 6px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 16px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes badgePulse {
+            0%, 100% { 
+                background: rgba(0, 255, 136, 0.1);
+                box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+            }
+            50% { 
+                background: rgba(0, 255, 136, 0.15);
+                box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+            }
+        }
+        
+        .neural-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            animation: neuralDot 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes neuralDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+        
+        .bot-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, 
+                var(--accent-primary) 0%, 
+                var(--accent-secondary) 50%, 
+                #ffffff 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleShimmer 3s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+            letter-spacing: -0.5px;
+        }
+        
+        @keyframes titleShimmer {
+            0%, 100% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.2) saturate(1.5); }
+        }
+        
+        .bot-subtitle {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+        }
+        
+        .neural-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .form-field {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .field-icon {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            animation: fieldIconPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes fieldIconPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .neural-select-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .neural-select-wrapper:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.03);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 136, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .neural-select-wrapper:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 
+                0 0 40px var(--success-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        .neural-select {
+            width: 100%;
+            padding: 18px 50px 18px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            appearance: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .neural-select:focus {
+            outline: none;
+        }
+        
+        .neural-select option {
+            background: #0a0a0f;
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .select-chevron {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .select-chevron::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border: 2px solid var(--text-secondary);
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg);
+            top: 6px;
+            left: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .neural-select-wrapper:hover .select-chevron::before {
+            border-color: var(--accent-primary);
+        }
+        
+        .ai-generate-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, 
+                var(--accent-primary) 0%, 
+                var(--accent-secondary) 100%);
+            border: none;
+            border-radius: 24px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 32px 0;
+            font-family: inherit;
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 136, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .ai-generate-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 30px 60px rgba(0, 255, 136, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        .ai-generate-btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .ai-generate-btn.processing {
+            pointer-events: none;
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 136, 0.7) 0%, 
+                rgba(0, 212, 255, 0.7) 100%);
+        }
+        
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon::before {
+            content: '⚡';
+            font-size: 12px;
+            animation: iconSpin 2s linear infinite;
+        }
+        
+        @keyframes iconSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ai-generate-btn.processing .btn-icon::before {
+            content: '🧠';
+            animation: brainPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes brainPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .neural-loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            margin: 16px 0;
+        }
+        
+        .neural-loading.active {
+            display: block;
+        }
+        
+        .loading-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .neural-waves {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .wave {
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to top, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+            animation: neuralWave 1.2s ease-in-out infinite;
+        }
+        
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes neuralWave {
+            0%, 100% { height: 20px; opacity: 0.3; }
+            50% { height: 40px; opacity: 1; }
+        }
+        
+        .ai-signal-result {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(20px);
+        }
+        
+        .ai-signal-result.reveal {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .signal-visual {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .signal-arrow-advanced {
+            font-size: 64px;
+            display: inline-block;
+            filter: drop-shadow(0 0 20px currentColor);
+            animation: advancedBounce 2s ease-in-out infinite;
+            position: relative;
+        }
+        
+        @keyframes advancedBounce {
+            0%, 100% { transform: translateY(0px); }
+            25% { transform: translateY(-12px); }
+            50% { transform: translateY(-20px); }
+            75% { transform: translateY(-8px); }
+        }
+        
+        .signal-arrow-advanced.buy {
+            color: var(--accent-primary);
+        }
+        
+        .signal-arrow-advanced.sell {
+            color: var(--accent-danger);
+            transform: rotate(180deg);
+            animation: advancedBounceSell 2s ease-in-out infinite;
+        }
+        
+        @keyframes advancedBounceSell {
+            0%, 100% { transform: rotate(180deg) translateY(0px); }
+            25% { transform: rotate(180deg) translateY(12px); }
+            50% { transform: rotate(180deg) translateY(20px); }
+            75% { transform: rotate(180deg) translateY(8px); }
+        }
+        
+        .signal-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            pointer-events: none;
+        }
+        
+        .ring {
+            position: absolute;
+            inset: 0;
+            border: 2px solid;
+            border-radius: 50%;
+            opacity: 0;
+            animation: ringExpand 2s ease-out infinite;
+        }
+        
+        .ring:nth-child(1) { 
+            border-color: var(--accent-primary);
+            animation-delay: 0s; 
+        }
+        .ring:nth-child(2) { 
+            border-color: var(--accent-secondary);
+            animation-delay: 0.5s; 
+        }
+        .ring:nth-child(3) { 
+            border-color: var(--accent-danger);
+            animation-delay: 1s; 
+        }
+        
+        @keyframes ringExpand {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .signal-type-advanced {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+        
+        .signal-type-advanced.buy {
+            color: var(--accent-primary);
+            text-shadow: 0 0 30px var(--success-glow);
+        }
+        
+        .signal-type-advanced.sell {
+            color: var(--accent-danger);
+            text-shadow: 0 0 30px var(--error-glow);
+        }
+        
+        .signal-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 1s ease-out;
+            position: relative;
+        }
+        
+        .confidence-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: confidenceShimmer 2s infinite;
+        }
+        
+        @keyframes confidenceShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .neural-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFlow 8s infinite linear;
+        }
+        
+        @keyframes particleFlow {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) translateX(0px) scale(0);
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) translateX(10px) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(-10vh) translateX(-10px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20vh) translateX(0px) scale(0);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .neural-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 28px;
+                border-radius: 24px;
+            }
+            
+            .bot-title {
+                font-size: 28px;
+            }
+            
+            .signal-arrow-advanced {
+                font-size: 52px;
+            }
+            
+            .signal-type-advanced {
+                font-size: 24px;
+            }
+            
+            .signal-metrics {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+        
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="neural-container">
+        <div class="neural-particles" id="neuralParticles"></div>
+        
+        <div class="ai-header">
+            <div class="neural-badge">
+                <div class="neural-icon"></div>
+                Neural AI Engine
+            </div>
+            <h1 class="bot-title">QUOTEX WIN</h1>
+            <p class="bot-subtitle">Advanced Trading Neural Network</p>
+        </div>
+        
+        <form class="neural-form">
+            <div class="form-field">
+                <label class="field-label">
+                    <div class="field-icon"></div>
+                    Broker Platform
+                </label>
+                <div class="neural-select-wrapper">
+                    <select class="neural-select" id="brokerSelect">
+                        <option value="">Initialize broker connection...</option>
+                        <option value="quotex">Quotex</option>
+                        <option value="iqoption">IQ Option</option>
+                        <option value="pocket">Pocket Option</option>
+                    </select>
+                    <div class="select-chevron"></div>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label class="field-label">
+                    <div class="field-icon"></div>
+                    Neural Asset Pair
+                </label>
+                <div class="neural-select-wrapper">
+                    <select class="neural-select" id="pairSelect">
+                        <option value="">Select trading instrument...</option>
+                        <option value="EURUSD_OTC">EUR/USD (OTC) - Major Forex</option>
+                        <option value="GBPUSD_OTC">GBP/USD (OTC) - Cable Pair</option>
+                        <option value="AUDUSD_OTC">AUD/USD (OTC) - Aussie Dollar</option>
+                        <option value="USDJPY_OTC">USD/JPY (OTC) - Yen Cross</option>
+                        <option value="USDCAD_OTC">USD/CAD (OTC) - Loonie</option>
+                        <option value="EURGBP_OTC">EUR/GBP (OTC) - Euro Sterling</option>
+                        <option value="EURJPY_OTC">EUR/JPY (OTC) - Euro Yen</option>
+                        <option value="GBPJPY_OTC">GBP/JPY (OTC) - Sterling Yen</option>
+                        <option value="CRYPTO_IDX_OTC">Crypto Index (OTC) - Digital Assets</option>
+                        <option value="GOLD_OTC">Gold (OTC) - Precious Metal</option>
+                        <option value="SILVER_OTC">Silver (OTC) - White Metal</option>
+                        <option value="OIL_OTC">Crude Oil (OTC) - Black Gold</option>
+                    </select>
+                    <div class="select-chevron"></div>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label class="field-label">
+                    <div class="field-icon"></div>
+                    Analysis Timeframe
+                </label>
+                <div class="neural-select-wrapper">
+                    <select class="neural-select" id="timeframeSelect">
+                        <option value="">Set analysis period...</option>
+                        <option value="1m">1 Minute - Scalping Mode</option>
+                        <option value="5m">5 Minutes - Quick Trades</option>
+                        <option value="15m">15 Minutes - Standard Analysis</option>
+                        <option value="30m">30 Minutes - Extended View</option>
+                        <option value="1h">1 Hour - Strategic Overview</option>
+                        <option value="4h">4 Hours - Long-term Trend</option>
+                    </select>
+                    <div class="select-chevron"></div>
+                </div>
+            </div>
+        </form>
+        
+        <button class="ai-generate-btn" id="aiGenerateBtn" onclick="generateNeuralSignal()">
+            <div class="btn-content">
+                <div class="btn-icon"></div>
+                <span id="btnText">Generate Neural Signal</span>
+            </div>
+        </button>
+        
+        <div class="neural-loading" id="neuralLoading">
+            <div class="loading-text">Neural network processing market data...</div>
+            <div class="neural-waves">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+        </div>
+        
+        <div class="ai-signal-result" id="aiSignalResult">
+            <div class="signal-visual">
+                <div class="signal-rings">
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                </div>
+                <div class="signal-arrow-advanced" id="signalArrowAdvanced">↗</div>
+            </div>
+            
+            <div class="signal-type-advanced" id="signalTypeAdvanced">BUY SIGNAL</div>
+            
+            <div class="signal-metrics">
+                <div class="metric">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value" id="accuracyValue">92%</div>
+                </div>
+                <div class="metric">
+                   <div class="metric-label">Strength</div>
+                   <div class="metric-value" id="strengthValue">High</div>
+               </div>
+           </div>
+           
+           <div class="confidence-bar">
+               <div class="confidence-fill" id="confidenceFill"></div>
+           </div>
+       </div>
+   </div>
+
+   <script>
+       // Ads and signal tracking system
+       let signalCount = 0;
+       let adsShown = false;
+       let isLocalDevelopment = window.location.protocol === 'file:';
+       
+       // Function to show initial ads after 2 seconds
+       function showInitialAds() {
+           // Skip ads in local development
+           if (isLocalDevelopment) {
+               console.log('Local development mode - ads disabled');
+               showNeuralNotification('Local development mode - ads disabled', 'info');
+               return;
+           }
+           
+           setTimeout(() => {
+               if (typeof show_9814780 === 'function') {
+                   show_9814780({ 
+                       type: 'inApp', 
+                       inAppSettings: { 
+                           frequency: 1, 
+                           capping: 0.1, 
+                           interval: 30, 
+                           timeout: 2, 
+                           everyPage: false 
+                       } 
+                   }).catch(e => {
+                       console.log('Initial ads failed to load:', e);
+                       showNeuralNotification('Ads temporarily unavailable', 'error');
+                   });
+               } else {
+                   console.log('Ads SDK not loaded - check network connection');
+                   showNeuralNotification('Ads SDK not available', 'error');
+               }
+           }, 2000);
+       }
+       
+       // Function to show rewarded ads every 2 signals
+       function showRewardedAds() {
+           // Skip ads in local development
+           if (isLocalDevelopment) {
+               console.log('Local development mode - rewarded ads disabled');
+               showNeuralNotification('Local development mode - rewarded ads disabled', 'info');
+               return;
+           }
+           
+           if (typeof show_9814780 === 'function') {
+               show_9814780('pop').then(() => {
+                   // User watched ad till the end
+                   showNeuralNotification('Reward earned! Continue generating signals!', 'success');
+               }).catch(e => {
+                   // User closed ad or error occurred
+                   console.log('Rewarded ads failed:', e);
+                   showNeuralNotification('Rewarded ads unavailable', 'error');
+               });
+           } else {
+               console.log('Ads SDK not available for rewarded ads');
+               showNeuralNotification('Rewarded ads not available', 'error');
+           }
+       }
+       
+       // Neural particle system
+       function createNeuralParticles() {
+           const particlesContainer = document.getElementById('neuralParticles');
+           
+           for (let i = 0; i < 30; i++) {
+               const particle = document.createElement('div');
+               particle.className = 'particle';
+               particle.style.left = Math.random() * 100 + '%';
+               particle.style.animationDelay = Math.random() * 8 + 's';
+               particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+               
+               // Randomize particle colors
+               const colors = ['#00ff88', '#00d4ff', '#ff3366'];
+               particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+               
+               particlesContainer.appendChild(particle);
+           }
+       }
+       
+       // Advanced neural signal generation
+       async function generateNeuralSignal() {
+           const broker = document.getElementById('brokerSelect').value;
+           const pair = document.getElementById('pairSelect').value;
+           const timeframe = document.getElementById('timeframeSelect').value;
+           
+           if (!broker || !pair || !timeframe) {
+               showNeuralNotification('Please configure all neural parameters!', 'error');
+               return;
+           }
+           
+           const btn = document.getElementById('aiGenerateBtn');
+           const btnText = document.getElementById('btnText');
+           const loading = document.getElementById('neuralLoading');
+           const result = document.getElementById('aiSignalResult');
+           
+           // Start processing state
+           btn.classList.add('processing');
+           btnText.textContent = 'Analyzing Neural Patterns...';
+           loading.classList.add('active');
+           result.classList.remove('reveal');
+           
+           // Simulate advanced AI processing stages
+           const processingStages = [
+               'Initializing neural network...',
+               'Analyzing market sentiment...',
+               'Processing price action patterns...',
+               'Calculating risk parameters...',
+               'Generating optimal signal...'
+           ];
+           
+           for (let i = 0; i < processingStages.length; i++) {
+               setTimeout(() => {
+                   document.querySelector('.loading-text').textContent = processingStages[i];
+               }, i * 800);
+           }
+           
+           // Generate sophisticated signal after processing
+           setTimeout(() => {
+               const signals = [
+                   { type: 'buy', strength: 'High', accuracy: Math.floor(Math.random() * 15 + 85) },
+                   { type: 'sell', strength: 'High', accuracy: Math.floor(Math.random() * 15 + 85) },
+                   { type: 'buy', strength: 'Medium', accuracy: Math.floor(Math.random() * 20 + 75) },
+                   { type: 'sell', strength: 'Medium', accuracy: Math.floor(Math.random() * 20 + 75) }
+               ];
+               
+               const randomSignal = signals[Math.floor(Math.random() * signals.length)];
+               displayAdvancedSignal(randomSignal);
+               
+               // Hide loading and show result
+               loading.classList.remove('active');
+               result.classList.add('reveal');
+               
+               // Reset button
+               btn.classList.remove('processing');
+               btnText.textContent = 'Generate New Signal';
+               
+               // Add success haptic feedback (if supported)
+               if (navigator.vibrate) {
+                   navigator.vibrate([100, 30, 100]);
+               }
+               
+               // Success notification
+               showNeuralNotification('Neural signal generated successfully!', 'success');
+               
+               // Increment signal count and check for rewarded ads
+               signalCount++;
+               if (signalCount % 2 === 0) {
+                   // Show rewarded ads every 2 signals
+                   setTimeout(() => {
+                       showRewardedAds();
+                   }, 1000);
+               }
+               
+           }, 4000);
+       }
+       
+       // Display advanced signal with animations
+       function displayAdvancedSignal(signal) {
+           const arrow = document.getElementById('signalArrowAdvanced');
+           const type = document.getElementById('signalTypeAdvanced');
+           const accuracy = document.getElementById('accuracyValue');
+           const strength = document.getElementById('strengthValue');
+           const confidenceFill = document.getElementById('confidenceFill');
+           
+           if (signal.type === 'buy') {
+               arrow.textContent = '↗';
+               arrow.className = 'signal-arrow-advanced buy';
+               type.textContent = 'BUY SIGNAL';
+               type.className = 'signal-type-advanced buy';
+           } else {
+               arrow.textContent = '↙';
+               arrow.className = 'signal-arrow-advanced sell';
+               type.textContent = 'SELL SIGNAL';
+               type.className = 'signal-type-advanced sell';
+           }
+           
+           // Animate values
+           animateValue(accuracy, 0, signal.accuracy, 1000, '%');
+           strength.textContent = signal.strength;
+           
+           // Animate confidence bar
+           setTimeout(() => {
+               confidenceFill.style.width = signal.accuracy + '%';
+           }, 500);
+           
+           // Add signal strength color coding
+           strength.style.color = signal.strength === 'High' ? '#00ff88' : '#00d4ff';
+       }
+       
+       // Animate numerical values
+       function animateValue(element, start, end, duration, suffix = '') {
+           const startTime = performance.now();
+           const update = (currentTime) => {
+               const elapsed = currentTime - startTime;
+               const progress = Math.min(elapsed / duration, 1);
+               const current = Math.floor(start + (end - start) * progress);
+               element.textContent = current + suffix;
+               
+               if (progress < 1) {
+                   requestAnimationFrame(update);
+               }
+           };
+           requestAnimationFrame(update);
+       }
+       
+       // Neural notification system
+       function showNeuralNotification(message, type) {
+           const notification = document.createElement('div');
+           
+           // Set colors based on notification type
+           let bgColor, borderColor, textColor;
+           switch(type) {
+               case 'success':
+                   bgColor = 'rgba(0, 255, 136, 0.1)';
+                   borderColor = 'rgba(0, 255, 136, 0.3)';
+                   textColor = '#00ff88';
+                   break;
+               case 'error':
+                   bgColor = 'rgba(255, 51, 102, 0.1)';
+                   borderColor = 'rgba(255, 51, 102, 0.3)';
+                   textColor = '#ff3366';
+                   break;
+               case 'info':
+                   bgColor = 'rgba(0, 212, 255, 0.1)';
+                   borderColor = 'rgba(0, 212, 255, 0.3)';
+                   textColor = '#00d4ff';
+                   break;
+               default:
+                   bgColor = 'rgba(255, 255, 255, 0.1)';
+                   borderColor = 'rgba(255, 255, 255, 0.3)';
+                   textColor = '#ffffff';
+           }
+           
+           notification.style.cssText = `
+               position: fixed;
+               top: 20px;
+               right: 20px;
+               background: ${bgColor};
+               border: 1px solid ${borderColor};
+               border-radius: 16px;
+               padding: 16px 24px;
+               color: ${textColor};
+               font-size: 14px;
+               font-weight: 600;
+               backdrop-filter: blur(20px);
+               z-index: 1000;
+               transform: translateX(100%);
+               transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+               box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+           `;
+           
+           notification.textContent = message;
+           document.body.appendChild(notification);
+           
+           // Slide in
+           setTimeout(() => {
+               notification.style.transform = 'translateX(0)';
+           }, 100);
+           
+           // Slide out and remove
+           setTimeout(() => {
+               notification.style.transform = 'translateX(100%)';
+               setTimeout(() => {
+                   document.body.removeChild(notification);
+               }, 300);
+           }, 3000);
+       }
+       
+       // Enhanced select interactions
+       document.querySelectorAll('.neural-select').forEach(select => {
+           select.addEventListener('change', function() {
+               if (this.value) {
+                   this.parentElement.style.borderColor = '#00ff88';
+                   this.parentElement.style.background = 'rgba(0, 255, 136, 0.05)';
+                   this.parentElement.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.15)';
+               }
+           });
+           
+           select.addEventListener('focus', function() {
+               this.parentElement.style.transform = 'translateY(-2px)';
+           });
+           
+           select.addEventListener('blur', function() {
+               if (!this.value) {
+                   this.parentElement.style.transform = 'translateY(0)';
+                   this.parentElement.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                   this.parentElement.style.background = 'rgba(255, 255, 255, 0.02)';
+                   this.parentElement.style.boxShadow = 'none';
+               }
+           });
+       });
+       
+       // Keyboard shortcuts
+       document.addEventListener('keydown', function(e) {
+           if (e.key === 'Enter' && e.ctrlKey) {
+               generateNeuralSignal();
+           }
+           if (e.key === 'Escape') {
+               // Reset form
+               document.querySelectorAll('.neural-select').forEach(select => {
+                   select.value = '';
+                   select.parentElement.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                   select.parentElement.style.background = 'rgba(255, 255, 255, 0.02)';
+                   select.parentElement.style.boxShadow = 'none';
+               });
+               document.getElementById('aiSignalResult').classList.remove('reveal');
+           }
+       });
+       
+       // Voice command support (experimental)
+       if ('webkitSpeechRecognition' in window) {
+           const recognition = new webkitSpeechRecognition();
+           recognition.continuous = false;
+           recognition.interimResults = false;
+           recognition.lang = 'en-US';
+           
+           document.addEventListener('keydown', function(e) {
+               if (e.key === 'v' && e.ctrlKey) {
+                   recognition.start();
+                   showNeuralNotification('Voice command activated...', 'success');
+               }
+           });
+           
+           recognition.onresult = function(event) {
+               const command = event.results[0][0].transcript.toLowerCase();
+               if (command.includes('generate signal')) {
+                   generateNeuralSignal();
+               }
+           };
+       }
+       
+       // Advanced gesture support for touch devices
+       let touchStartY = 0;
+       document.addEventListener('touchstart', function(e) {
+           touchStartY = e.touches[0].clientY;
+       });
+       
+       document.addEventListener('touchend', function(e) {
+           const touchEndY = e.changedTouches[0].clientY;
+           const diff = touchStartY - touchEndY;
+           
+           // Swipe up to generate signal
+           if (diff > 50) {
+               const btn = document.getElementById('aiGenerateBtn');
+               if (!btn.classList.contains('processing')) {
+                   generateNeuralSignal();
+               }
+           }
+       });
+       
+       // Real-time market connection simulation
+       function simulateMarketConnection() {
+           const badge = document.querySelector('.neural-badge');
+           let connected = true;
+           
+           setInterval(() => {
+               if (Math.random() < 0.05) { // 5% chance to simulate connection issues
+                   connected = !connected;
+                   badge.style.background = connected ? 
+                       'rgba(0, 255, 136, 0.1)' : 
+                       'rgba(255, 51, 102, 0.1)';
+                   badge.style.borderColor = connected ? 
+                       'rgba(0, 255, 136, 0.3)' : 
+                       'rgba(255, 51, 102, 0.3)';
+                   badge.firstElementChild.style.background = connected ? 
+                       '#00ff88' : '#ff3366';
+                   
+                   if (!connected) {
+                       showNeuralNotification('Market connection unstable', 'error');
+                   }
+               }
+           }, 10000);
+       }
+       
+       // Check if ads SDK loaded properly
+       function checkAdsSDK() {
+           if (typeof show_9814780 === 'function') {
+               console.log('Ads SDK loaded successfully');
+               return true;
+           } else {
+               console.log('Ads SDK not loaded - will retry');
+               return false;
+           }
+       }
+       
+       // Initialize everything
+       window.addEventListener('load', function() {
+           createNeuralParticles();
+           simulateMarketConnection();
+           
+           // Check ads SDK and show initial ads
+           setTimeout(() => {
+               if (checkAdsSDK()) {
+                   showInitialAds();
+               } else {
+                   // Retry loading ads after a delay
+                   setTimeout(() => {
+                       if (checkAdsSDK()) {
+                           showInitialAds();
+                       }
+                   }, 3000);
+               }
+           }, 1000);
+           
+           // Preload success
+           setTimeout(() => {
+               if (isLocalDevelopment) {
+                   showNeuralNotification('Neural AI Engine loaded (Local Mode)', 'info');
+                   showNeuralNotification('For ads to work, run on HTTP server', 'info');
+               } else {
+                   showNeuralNotification('Neural AI Engine loaded successfully', 'success');
+               }
+           }, 1000);
+           
+           // Add subtle container breathing animation
+           const container = document.querySelector('.neural-container');
+           let breatheDirection = 1;
+           
+           setInterval(() => {
+               const currentScale = breatheDirection > 0 ? 1.002 : 1;
+               container.style.transform = `scale(${currentScale})`;
+               breatheDirection *= -1;
+           }, 3000);
+       });
+       
+       // Performance monitoring
+       const observer = new PerformanceObserver((list) => {
+           for (const entry of list.getEntries()) {
+               if (entry.duration > 100) {
+                   console.warn('Performance issue detected:', entry);
+               }
+           }
+       });
+       observer.observe({ entryTypes: ['measure', 'navigation'] });
+       
+   </script>
+</body>
+</html>
